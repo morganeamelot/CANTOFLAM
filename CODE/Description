@@ -1,1 +1,6 @@
 Code description 
+CODE include: 
+- fonction_plotGAM_221018.R: adapted fonction for plotting gam 
+- script_article_CPUE_221019.R: code for abundance/CPUE analysis, including Figure 2 from the paper as well as so numeric results
+- script_article_CPUE_GAM_221018.R; code for spillover analysis, including Figure 4 from the paper
+- script_article_Longueur_221019.R: code for size analysis, including Figure 3 from the paper
