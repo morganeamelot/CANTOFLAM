@@ -1,1 +1,5 @@
 Data description
+DATA includes: 
+- abundace data: allspecies_allmonths_CPUE.csv
+- size data: allspecies_allmonths_long_et_masse.csv
+- points location informations: dist.csv
