@@ -1,5 +1,5 @@
 # title: "Script Longueur"
-# author: "Juju"
+# author: "Julien Normand"
 # date: "03/08/2021"
 
 rm(list= ls())
@@ -15,24 +15,16 @@ library(knitr)
 library(MASS)
 library(car)
 
-## Stratégie analytique : 
-#
-#  Y =        Longueur
-#  Espèces =  Homard et Tourteau
-#  Mois =     Juin et Septembre
 
-## IV.      Y = Longueur
-# Chargement du jeu de donnees :
-## Definition de la racine : 
-#racine   <- "C:/Users/jnormand/Documents/general/boulot/homards/Etude_complementaire"
-setwd("N:/02_OBSERVATION_SURVEILLANCE/05_IGA/20_CNPE_FLAMANVILLE/56=ETUDES COMPLEMENTAIRES/2019_CANTOFLAM")
 
-## je charge le jeu de donn?es complet des CPUE : toutes les esp?ces, tous les mois
-TAB <- read.table("data/data_analyses_explo/long_et_masse/allspecies_allmonths_long_et_masse.csv", 
-                  header=TRUE, sep="\t", na.strings="NA", dec=".", strip.white=TRUE)
+
+## load data
+TAB <-read.delim("~/git/CANTOFLAM/DATA/allspecies_allmonths_long_et_masse.csv")
 TAB                                        <- droplevels(TAB)
-tab2  <- read.table("data/data_analyses_explo/dist.csv", header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
+tab2  <- read.table("~/git/CANTOFLAM/DATA/dist.csv",  header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
 
+
+# data format
 tab2$POINT <- as.factor(tab2$POINT)
 
 TAB$ZONE     <- as.factor(TAB$DR)
@@ -56,30 +48,30 @@ TAB$espece <- as.factor(TAB$espece)
 TAB$mois <- as.factor(TAB$mois)
 summary(TAB)
 ######################################################################
-#####////////////////       HOMARD     \\\\\\\\\\\\\\\\\\\\\\\\\\#####
+#####////////////////       LOBSTER    \\\\\\\\\\\\\\\\\\\\\\\\\\#####
 ######################################################################
 i=3
 tab <- droplevels(TAB[which(TAB$espece == levels(TAB$espece)[i]),])
 print(levels(TAB$espece)[i])
 
-######################## Mois= Juin ##################################
+######################## Month= June ##################################
 j=1
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 
 # Formula is: Longueur  ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP)
 lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
-print(summary(lmm1)) ## Ici, on r?cup?re la variance et la Std Dev. pour les effets random ET les Estimate et Std Error associ?s aux effets fixes
-# test des effets random
+#Intercept variance estimation  ZONE:PERIODE by CAMP (survey) and  POINT (sample lcoation), GLMM_1
+print(summary(lmm1)) ## extract Std Dev. for random effect random AND the Estimate and Std Error for fixed effects
+# Random effects test
 lmm1_2 <- update(lmm1, . ~ . - (1 | POINT))
 lmm1_3 <- update(lmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(lmm1, lmm1_2)
 test_CAMP  <- anova(lmm1, lmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on r?cup?re Df (=6/7), Chisq et Pr(>Chisq)
+print(test_POINT) ## Ici, POINT random effect test,extract Df (=6/7), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(lmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
+# Fixed effect test
+print(Anova(lmm1))  ## extract Chisq, Df et Pr(>Chsiq)
 rm(lmm1_2, lmm1_3)
 
 
@@ -102,26 +94,26 @@ newdat$PERIODE<-factor(newdat$PERIODE,c("AVANT","APRES"))
 newdat$sp <- "lobster"
 newdat$month <- "june"
 stock <- newdat
-######################## Mois= Sept ##################################
+######################## Month= Sept ##################################
 j=2
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 
-#Aa1. Modèle LMM_1
+#Aa1. Mod?le LMM_1
 
 # Formula is: Longueur  ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP)
 lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
-print(summary(lmm1)) ## Ici, on r?cup?re la variance et la Std Dev. pour les effets random ET les Estimate et Std Error associ?s aux effets fixes
+#Intercept variance estimation  ZONE:PERIODE by CAMP (survey) and  POINT (sample lcoation), GLMM_1
+print(summary(lmm1)) ## extract Std Dev. for random effect random AND the Estimate and Std Error for fixed effects
 # test des effets random
 lmm1_2 <- update(lmm1, . ~ . - (1 | POINT))
 lmm1_3 <- update(lmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(lmm1, lmm1_2)
 test_CAMP  <- anova(lmm1, lmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on r?cup?re Df (=6/7), Chisq et Pr(>Chisq)
+print(test_POINT) ##test Random effect POINT, extract Df (=6/7), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(lmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
+# fixed effect est 
+print(Anova(lmm1))  ## extract Chisq, Df et Pr(>Chsiq)
 
 
 #Plot estimates (ranef) and standard-error
@@ -144,18 +136,18 @@ newdat$sp <- "lobster"
 newdat$month <- "sept."
 stock <- rbind(newdat, stock)
 ######################################################################
-#####////////////////     TOURTEAU     \\\\\\\\\\\\\\\\\\\\\\\\\\#####
+#####////////////////  EDIBLE CRAB     \\\\\\\\\\\\\\\\\\\\\\\\\\#####
 ######################################################################
 i=4
 tab <- droplevels(TAB[which(TAB$espece == levels(TAB$espece)[i]),])
 print(levels(TAB$espece)[i])
 
-######################## Mois= Juin ##################################
+######################## Month=June ##################################
 j=1
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 
-#Aa1. Modèle LMM_1
+#Aa1. Mod?le LMM_1
 
 # Formula is: Longueur  ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP)
 lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
@@ -164,17 +156,17 @@ lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), da
 lmm1 <- lmer(long ~ ZONE + (1 | POINT) + (1 | CAMP), data = tab1)
 
 
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
-print(summary(lmm1)) ## Ici, on r?cup?re la variance et la Std Dev. pour les effets random ET les Estimate et Std Error associ?s aux effets fixes
-# test des effets random
+#Intercept variance estimation  ZONE:PERIODE by CAMP (survey) and  POINT (sample lcoation), GLMM_1
+print(summary(lmm1)) ## extract Std Dev. for random effects AND the estimates and Std Error for fixed effects
+# Random effects test
 lmm1_2 <- update(lmm1, . ~ . - (1 | POINT))
 lmm1_3 <- update(lmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(lmm1, lmm1_2)
 test_CAMP  <- anova(lmm1, lmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on r?cup?re Df (=6/7), Chisq et Pr(>Chisq)
+print(test_POINT) ## test POINT random effect, extract  Df (=6/7), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(lmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
+# Fixed effect test
+print(Anova(lmm1))  ## extract Chisq, Df et Pr(>Chsiq)
 rm(lmm1_2, lmm1_3)
 
 #Plot estimates (ranef) and standard-error
@@ -199,27 +191,27 @@ newdat$month <- "june"
 newdat <- newdat[, c("ZONE", "PERIODE", "long", "plo", "phi", "tlo", "thi", "sp", "month")]
 stock <- rbind(stock, newdat)
 
-######################## Mois= Sept ##################################
+######################## Moonth= Sept ##################################
 j=2
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 
-#Aa1. Modèle LMM_1
+#Aa1. Mod?le LMM_1
 
 # Formula is: Longueur  ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP)
 lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
 
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
-print(summary(lmm1)) ## Ici, on r?cup?re la variance et la Std Dev. pour les effets random ET les Estimate et Std Error associ?s aux effets fixes
-# test des effets random
+#Intercept variance estimation  ZONE:PERIODE by CAMP (survey) and  POINT (sample lcoation), GLMM_1
+print(summary(lmm1)) ## Extract variance and Std Dev. for random effects AND the estimate and Std Error for fixed effects
+# Random effect test 
 lmm1_2 <- update(lmm1, . ~ . - (1 | POINT))
 lmm1_3 <- update(lmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(lmm1, lmm1_2)
 test_CAMP  <- anova(lmm1, lmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on r?cup?re Df (=6/7), Chisq et Pr(>Chisq)
+print(test_POINT) ##  Random effect POINT test, extract  Df (=6/7), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(lmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
+# test fixed effects
+print(Anova(lmm1))  ## extract Chisq, Df et Pr(>Chsiq)
 rm(lmm1_2, lmm1_3)
 
 
@@ -245,18 +237,18 @@ newdat$month <- "sept."
 stock <- rbind(stock, newdat)
 
 ######################################################################
-#####////////////////    ARAIGNEE      \\\\\\\\\\\\\\\\\\\\\\\\\\#####
+#####////////////////   SPIDER CRAB    \\\\\\\\\\\\\\\\\\\\\\\\\\#####
 ######################################################################
 i=1
 tab <- droplevels(TAB[which(TAB$espece == levels(TAB$espece)[i]),])
 print(levels(TAB$espece)[i])
 
-######################## Mois= Juin ##################################
+######################## Moonth= Juin ##################################
 j=1
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 
-#Aa1. Modèle LMM_1
+#Aa1. Mod?le LMM_1
 
 # Formula is: Longueur  ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP)
 lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
@@ -264,36 +256,36 @@ lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), da
 lmm1 <- lmer(long ~ 1 + (1 | POINT) + (1 | CAMP), data = tab1)
 
 
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
-print(summary(lmm1)) ## Ici, on récupère la variance et la Std Dev. pour les effets random ET les Estimate et Std Error associés aux effets fixes
-# test des effets random
+#Intercept variance estimation  ZONE:PERIODE by CAMP (survey) and  POINT (sample lcoation), GLMM_1
+print(summary(lmm1)) ## extract variance and Std Dev. random effect AND the estiamtes and Std Error for fixed effects 
+# test random effects
 lmm1_2 <- update(lmm1, . ~ . - (1 | POINT))
 lmm1_3 <- update(lmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(lmm1, lmm1_2)
 test_CAMP  <- anova(lmm1, lmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on récupère Df (num/denom), Chisq et Pr(>Chisq)
+print(test_POINT) ## Ici, Random effect POINT test, extract Df (num/denom), Chisq et Pr(>Chisq)
 print(test_CAMP)
 
-######################## Mois= Sept ##################################
+######################## Month= Sept ##################################
 j=2
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 
-#Aa1. Modèle LMM_1
+#Aa1. Mod?le LMM_1
 
 # Formula is: Longueur  ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP)
 lmm1 <- lmer(long ~ ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
-print(summary(lmm1)) ## Ici, on récupère la variance et la Std Dev. pour les effets random ET les Estimate et Std Error associés aux effets fixes
-# test des effets random
+#Intercept variance estimation  ZONE:PERIODE by CAMP (survey) and  POINT (sample lcoation), GLMM_1
+print(summary(lmm1)) ## extract variance and Std Dev. for random effects and the Estimate and Std Error for fixed effects
+# test random effects
 lmm1_2 <- update(lmm1, . ~ . - (1 | POINT))
 lmm1_3 <- update(lmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(lmm1, lmm1_2)
 test_CAMP  <- anova(lmm1, lmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on récupère Df (num/denom), Chisq et Pr(>Chisq)
+print(test_POINT) ##test Random POINT effect, extract Df (num/denom), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(lmm1))  ## Ici, on récupère Chisq, Df et Pr(>Chsiq)
+# test fixed effects
+print(Anova(lmm1))  ## extract Chisq, Df et Pr(>Chsiq)
 rm(lmm1_2, lmm1_3)
 
 #Plot estimates (ranef) and standard-error
@@ -316,11 +308,11 @@ newdat$sp <- "spider crab"
 newdat$month <- "sept."
 stock <- rbind(stock, newdat)
 
-write.table(stock, "./article/tabs/estimates.csv", row.names = F)
-write.table(stock, "C:/Users/jnormand/Documents/boulot/56=ETUDES COMPLEMENTAIRES/article/tabs/estimates.csv", row.names = F)
+#write.table(stock, "./article/tabs/estimates.csv", row.names = F)
 
 
-# graphique 2 pour l'article
+# PAPER: Figure 2: 
+
 library(tidyr)
 library(dplyr)
 head(stock)
@@ -343,7 +335,6 @@ plot1<- ggplot(stock, aes(x= ZONE2, y= long, colour= PERIODE2))+
   scale_colour_discrete(name = "Period", labels = c("Before", "After", "No effect for period"))+
   labs(x= "Protected area", y= "Length (mm)")+facet_grid(sp~month, scales= "free")
 
-tiff("//portenbessin/serha/02_OBSERVATION_SURVEILLANCE/05_IGA/20_CNPE_FLAMANVILLE/56=ETUDES COMPLEMENTAIRES/2019_CANTOFLAM/article/figs/Long_mm_221018.tif",
-     units="in", width=8, height=8, res=300)
+
 plot1
 dev.off()

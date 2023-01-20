@@ -1,5 +1,7 @@
-# author: "Juju"
+# author: "Julien Normand"
 # date: "3 aout 2021"
+
+# packages 
 rm(list= ls())
 library(ggplot2) 
 library(lme4)
@@ -13,18 +15,17 @@ library(knitr)
 library(MASS)
 library(car)
 
-## Working directory : 
-
 
 ## Loading dataset : all species and months
-TAB <- read.table("data/data_analyses_explo/CPUE/allspecies_allmonths_CPUE.csv", 
+TAB <- read.table("~/git/CANTOFLAM/DATA/allspecies_allmonths_CPUE.csv", 
                   header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
 
 TAB[which(TAB$mois== "septembre"), "mois"] <- "sept"
 TAB                                        <- droplevels(TAB)
 
-tab2  <- read.table("data/data_analyses_explo/dist.csv",  header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
+tab2  <- read.table("~/git/CANTOFLAM/DATA/dist.csv",  header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
 
+# Formatting
 TAB$ZONE     <- as.factor(substr(TAB$CANTO, 7,12))
 TAB$PERIODE  <- as.factor(substr(TAB$CANTO, 1,5))
 TAB$CAMP     <- as.factor(TAB$AN)
@@ -48,6 +49,8 @@ rm(tab2, et, moy)
 TAB$espece <- as.factor(TAB$espece)
 TAB$mois <- as.factor(TAB$mois)
 summary(TAB)
+
+#### Model fitting by species ###
 ############################################################################################################
 #sp = lobster 
 i=3
@@ -58,7 +61,7 @@ j=1
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT
+#Interceps variance estimation  ZONE:PERIODE by CAMP(survey) and POINT (sampling location)
 print(summary(glmm1))
 # test des effets random
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
@@ -67,8 +70,8 @@ test_POINT <- anova(glmm1, glmm1_2)
 test_CAMP  <- anova(glmm1, glmm1_3)
 print(test_POINT)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(glmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
+# Fixed effects test
+print(Anova(glmm1))  ## Extract Chisq, Df et Pr(>Chsiq)
 rm(glmm1_2, glmm1_3)
 #Plot estimates (ranef) and standard-error
 newdat          <- expand.grid(ZONE = unique(tab1$ZONE), PERIODE = unique(tab1$PERIODE), NB_CAPT = 1, NB_CAS = 1)
@@ -90,7 +93,7 @@ newdat$month <- "june"
 stock <- newdat
 g0 <- ggplot(newdat, aes(x= ZONE, y= NB_CAPT, colour= PERIODE)) 
 g0 <- g0 + geom_pointrange(aes(ymin= tlo, ymax= thi), position = position_dodge(0.1))
-g0 <- g0 + theme(panel.background = element_rect(fill= "white", colour = "black", size=1), 
+g0 <- g0 + theme(panel.background = element_rect(fill= "white", colour = "black", linewidth =1), 
                  panel.grid.minor = element_blank(), 
                  axis.title= element_text(size=14, colour= "black"), axis.text=element_text(size=12, colour= "black"),
                  legend.title = element_text(size=14), legend.text = element_text(size=12)) 
@@ -104,16 +107,16 @@ j=2
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT
+#Interceps variance estimation  ZONE:PERIODE by CAMP(survey) and POINT (sampling location)
 print(summary(glmm1))
-# test des effets random
+# Random effect test
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
 glmm1_3 <- update(glmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(glmm1, glmm1_2)
 test_CAMP  <- anova(glmm1, glmm1_3)
 print(test_POINT) ## Ici, test de l'effet Random POINT, on r?cup?re Df (=6/7), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
+#  Fixed effects test
 print(Anova(glmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
 rm(glmm1_2, glmm1_3)
 #Plot estimates (ranef) and standard-error
@@ -154,17 +157,17 @@ j=1
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT
+#Interceps variance estimation  ZONE:PERIODE by CAMP(survey) and POINT (sampling location)
 print(summary(glmm1))
-# test des effets random
+# test random effect
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
 glmm1_3 <- update(glmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(glmm1, glmm1_2)
 test_CAMP  <- anova(glmm1, glmm1_3)
-print(test_POINT) ## Ici, test de l'effet Random POINT, on r?cup?re Df (=6/7), Chisq et Pr(>Chisq)
+print(test_POINT) ##  Random POINT effect, extract Df (=6/7), Chisq et Pr(>Chisq)
 print(test_CAMP)
-# test des effets fixes
-print(Anova(glmm1))  ## Ici, on r?cup?re Chisq, Df et Pr(>Chsiq)
+# Fixed effect test 
+print(Anova(glmm1))  ## Extract Chisq, Df et Pr(>Chsiq)
 rm(glmm1_2, glmm1_3)
 
 #Plot estimates (ranef) and standard-error
@@ -201,7 +204,7 @@ j=2
 tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT, GLMM_1
+#Interceps variance estimation  ZONE:PERIODE by CAMP(survey) and POINT (sampling location)
 print(summary(glmm1)) 
 # test des effets random
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
@@ -210,7 +213,7 @@ test_POINT <- anova(glmm1, glmm1_2)
 test_CAMP  <- anova(glmm1, glmm1_3)
 print(test_POINT)
 print(test_CAMP)
-# test des effets fixes
+# test fixed effect
 print(Anova(glmm1))
 rm(glmm1_2, glmm1_3)
 
@@ -254,29 +257,29 @@ tab1 <- droplevels(tab[which(tab$mois == levels(tab$mois)[j]),])
 print(levels(tab$mois)[j])
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
 print(summary(glmm1)) 
-# test des effets random
+# test random effects
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
 glmm1_3 <- update(glmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(glmm1, glmm1_2)
 test_CAMP  <- anova(glmm1, glmm1_3)
 print(test_POINT) ## 
 print(test_CAMP)
-# test des effets fixes
+# test fixed effects
 print(Anova(glmm1)) 
 rm(glmm1_2, glmm1_3)
 ## Interaction ZONE:PERIODE NS and so Model reduction
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
 
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT
+#Interceps variance estimation  ZONE:PERIODE by CAMP(survey) and POINT (sampling location)
 print(summary(glmm1))
-# test des effets random
+# rest random effects
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
 glmm1_3 <- update(glmm1, . ~ . - (1 | CAMP))
 test_POINT <- anova(glmm1, glmm1_2)
 test_CAMP  <- anova(glmm1, glmm1_3)
 print(test_POINT) 
 print(test_CAMP)
-# test des effets fixes
+# test fixed effects
 print(Anova(glmm1))  
 rm(glmm1_2, glmm1_3)
 
@@ -318,7 +321,7 @@ print(levels(tab$mois)[j])
 
 glmm1 <- glmer.nb(NB_CAPT ~ offset(log(NB_CAS)) + ZONE + PERIODE + ZONE:PERIODE + (1 | POINT) + (1 | CAMP), data = tab1)
 
-#Estimation de la variance des intercepts ZONE:PERIODE par CAMP et par POINT
+#Interceps variance estimation  ZONE:PERIODE by CAMP(survey) and POINT (sampling location)
 print(summary(glmm1)) 
 # test des effets random
 glmm1_2 <- update(glmm1, . ~ . - (1 | POINT))
@@ -380,7 +383,12 @@ g5 <- g5 + labs(x= "ZONE", y= "CPUE")
 # png("rapport_acti_oct2019/figs/fig2_I3B.png", width= 300, height = 300)
 # g5
 # dev.off()
-# ARTICLE : Figure 1
+
+#########################################
+####         PAPER                    ###
+#########################################
+
+# PAPER : Figure 1
 library(tidyr)
 library(dplyr)
 head(stock)
@@ -405,12 +413,16 @@ plot1 <- ggplot(stock, aes(x= ZONE2, y= NB_CAPT, colour= PERIODE2))+
   scale_colour_discrete(name = "Period", labels = c("Before", "After", "No effect for period"))+
   labs(x= "Protected area", y= "CPUE")+facet_grid(sp~month, scales= "free")
 
-tiff("//portenbessin/serha/02_OBSERVATION_SURVEILLANCE/05_IGA/20_CNPE_FLAMANVILLE/56=ETUDES COMPLEMENTAIRES/2019_CANTOFLAM/article/figs/CPUE_mm_221018.tif",
-     units="in", width=8, height=8, res=300)
+
 plot1
 dev.off()
 
-### ARTICLE : computation of the lobser CPUE between 2000 and 2005, then between 2000 and 2018 inside the MPA
+#######################################
+# Computed values present in the paper#
+#######################################
+
+# lobster
+### PAPER : computation of the lobser CPUE between 2000 and 2005, then between 2000 and 2018 inside the MPA
 pipo <- TAB %>% filter(espece== "homard" & AN %in% c(2000,2005,2017) & ZONE== "DEDANS") %>%
   group_by(mois, CAMP) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
   pivot_wider(names_from= "CAMP", values_from = "mean_CPUE")
@@ -419,60 +431,7 @@ pipo %>%  mutate(effet_5ans = (ans5-creation)*100/creation, effet_18ans= (ans17-
 
 TAB%>% group_by(POINT) %>% summarise(mean_dist= mean(dist)) %>% arrange(mean_dist)
 
-###ARTICLE : computation of the e. crab CPUE between 2000 and 2018, for the point closest to the MPA center (8 = 143m) and the point nearest from the MPA boundaries (10 = 1533)
-pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(8,10)) %>% 
-  group_by(mois, POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
-colnames(pipo)[2:3] <- c("point_8", "point_10")  
-pipo %>%  mutate(effet_site6 = (point_10-point_8)*100/point_8)
-
-###ARTICLE : computation of the e. crab CPUE between 2000 and 2018, for the point nearest from the MPA boundaries (10 = 1533) and the point furthest from the MPA boundaries  (6 = 6335)
-pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(10,6)) %>% 
-  group_by(mois, POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
-colnames(pipo)[2:3] <- c("point_6", "point_10")  
-pipo %>%  mutate(effet_site6 = (point_6-point_10)*100/point_10)
-
-### Pour l'article, calcul de la variation moyenne des CPUE tourteaux sur la période (2000-2018) entre le point de
-#la bordure extérieure (10 = 1533) et le point le plus éloigné (6 = 6335)
-pipo <- TAB %>% filter(espece== "tourteau" & AN %in% c(2000,2017)) %>% 
-  group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("AN"), values_from = "mean_CPUE")
-colnames(pipo)[2:3] <- c("point_6", "point_10")  
-pipo %>%  mutate(effet_site6 = (point_6-point_10)*100/point_10)
-
-### Pour l'article, calcul de la variation moyenne des CPUE araignees sur la période (2000-2018) entre le point du centre
-#et de  la bordure extérieure en Juin seulement
-pipo <- TAB %>% filter(espece== "araignee" & mois== "juin" & POINT %in% c(8,10)) %>% 
-  group_by(POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
-colnames(pipo) <- c("point_8", "point_10")  
-pipo %>%  mutate(effet_site6 = (point_8-point_10)*100/point_8)
-
-### Pour l'article, calcul de la variation moyenne des CPUE araignees sur la période (2000-2018) entre le point du centre
-#et le plus lointain pour septembre
-pipo <- TAB %>% filter(espece== "araignee" & mois== "sept" & POINT %in% c(8,6)) %>% 
-  group_by(POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
-colnames(pipo) <- c("point_6", "point_8")  
-pipo %>%  mutate(effet_site6 = (point_8-point_10)*100/point_8)
-
-### Pour l'article, calcul de la variation moyenne des CPUE araignees entre 2000 et 2017
-pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2017) & mois == "juin") %>% 
-  group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("AN"), values_from = "mean_CPUE")
-colnames(pipo)[2:3] <- c("creation", "final")  
-pipo %>%  mutate(effet_reserve = (final-creation)*100/creation)
-
-### Pour l'article, calcul de la variation moyenne des CPUE araignees entre 2000 et 2005 puis entre 2005 et 2017
-pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2005,2017) & mois == "sept") %>% 
-  group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
-  tidyr::pivot_wider(names_from= c("AN"), values_from = "mean_CPUE")
-colnames(pipo)[2:4] <- c("creation", "intermediaire", "final")  
-pipo %>%  mutate(effet_reserve_int = (intermediaire-creation)*100/creation)
-pipo %>%  mutate(effet_reserve_fin = (final-intermediaire)*100/intermediaire)
-
-## Pour l'article, comparaison 2000 ==> 2017 et 2000 ==> 2005 dans la réserve homard
+## Paper, Change in lobster CPUE comparison between 2000, 2005 and 2017 inside the MPA 
 pipo <- TAB %>% filter(espece== "homard" & AN %in% c(2000,2005, 2017) & ZONE== "DEDANS") %>%
   group_by(mois, CAMP) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
   tidyr::pivot_wider(names_from= c( "CAMP"), values_from = "mean_CPUE")
@@ -483,8 +442,8 @@ pipo %>%  mutate(effet_interm = (interm-creation)*100/creation,
 
 
 
-### Pour l'article, calcul de l'augmentation moyenne des CPUE homards entre 2000 et 2018 pour le point le
-## plus proche de la r?serve (9 = 613m), puis entre 2000 et 2018 pour le point le plus ?loign? (6= 6335m)
+### Paper: mean lobster CPUE increase between 2000 and 2018 for a pont close to the reserve (9 = 613m)
+# and the furthest point (6= 6335m)
 TAB %>% filter(ZONE== "DEHORS") %>% group_by(POINT) %>% summarise(mean_dist= mean(dist)) %>% arrange(mean_dist)
 
 pipo <- TAB %>% filter(espece== "homard" & AN %in% c(2000,2017) & POINT %in% c(6,9)) %>%
@@ -493,3 +452,62 @@ pipo <- TAB %>% filter(espece== "homard" & AN %in% c(2000,2017) & POINT %in% c(6
 colnames(pipo)[2:5] <- c("creation_6", "creation_9", "ans17_6", "ans17_9")  
 
 pipo %>%  mutate(effet_site6 = (ans17_6-creation_6)*100/creation_6, effet_site9= (ans17_9-creation_9)*100/creation_9)
+
+
+#edible crab 
+###PAPER : computation of the e. crab CPUE between 2000 and 2018, for the point closest 
+#to the MPA center (8 = 143m) and the point nearest from the MPA boundaries (10 = 1533)
+pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(8,10)) %>% 
+  group_by(mois, POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
+colnames(pipo)[2:3] <- c("point_8", "point_10")  
+pipo %>%  mutate(effet_site6 = (point_10-point_8)*100/point_8)
+
+###PAPER : computation of the e. crab CPUE between 2000 and 2018,
+#for the point nearest from the MPA boundaries (10 = 1533) and the point furthest from the MPA boundaries  (6 = 6335)
+pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(10,6)) %>% 
+  group_by(mois, POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
+colnames(pipo)[2:3] <- c("point_6", "point_10")  
+pipo %>%  mutate(effet_site6 = (point_6-point_10)*100/point_10)
+
+### PAPER: mean edible crab CPUE variation over 2000-2018, period between the MPA border 
+# sample point (10 = 1533) and the furthest point (6 = 6335)
+pipo <- TAB %>% filter(espece== "tourteau" & AN %in% c(2000,2017)) %>% 
+  group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("AN"), values_from = "mean_CPUE")
+colnames(pipo)[2:3] <- c("point_6", "point_10")  
+pipo %>%  mutate(effet_site6 = (point_6-point_10)*100/point_10)
+
+#spider crab
+### computation of the s. crab CPUE between 2000 and 2018, for the point closest 
+#to the MPA center (8 = 143m) and the point nearest from the MPA boundaries (10 = 1533)
+pipo <- TAB %>% filter(espece== "araignee" & mois== "juin" & POINT %in% c(8,10)) %>% 
+  group_by(POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
+colnames(pipo) <- c("point_8", "point_10")  
+pipo %>%  mutate(effet_site6 = (point_8-point_10)*100/point_8)
+
+### computation of the s. crab CPUE between 2000 and 2018, for the point closest 
+#to the MPA center (8 = 143m) and and the furthest point (6 = 6335)
+pipo <- TAB %>% filter(espece== "araignee" & mois== "sept" & POINT %in% c(8,6)) %>% 
+  group_by(POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
+colnames(pipo) <- c("point_6", "point_8")  
+pipo %>%  mutate(effet_site6 = (point_8-point_10)*100/point_8)
+
+### mean spider crab  CPUE variation over 2000-2017 period in june 
+pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2017) & mois == "juin") %>% 
+  group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("AN"), values_from = "mean_CPUE")
+colnames(pipo)[2:3] <- c("creation", "final")  
+pipo %>%  mutate(effet_reserve = (final-creation)*100/creation)
+
+### mean spider crab  CPUE variation over 2000-2005 period and then 2005-2017 in september
+pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2005,2017) & mois == "sept") %>% 
+  group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("AN"), values_from = "mean_CPUE")
+colnames(pipo)[2:4] <- c("creation", "intermediaire", "final")  
+pipo %>%  mutate(effet_reserve_int = (intermediaire-creation)*100/creation)
+pipo %>%  mutate(effet_reserve_fin = (final-intermediaire)*100/intermediaire)
+

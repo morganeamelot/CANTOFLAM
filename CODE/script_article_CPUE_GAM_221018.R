@@ -1,11 +1,14 @@
-# author: "Juju"
+# author: "Julien Normand"
 # date: "19 oct. 2022"
-# Attention : fais appel à la fonction plotGAM2
+# Warning call plotGAM2 function
+
+# libraries
 rm(list= ls())
 library(ggplot2) 
 library(lme4)
 library(lattice)
 library(reshape2)
+library(grid)
 library(gridExtra)
 # library(dfoptim)
 # library(optimx)
@@ -22,18 +25,22 @@ library(mgcv)
 # library(tidymv)
 library(ggeffects)
 library(voxel)
-library(gridExtra)
 library(ISLR)
 # library(purrr)
-# Nombre de captures
-setwd("C:/Users/jnormand/Documents/boulot/56=ETUDES COMPLEMENTAIRES")
-#setwd("//portenbessin/serha/02_OBSERVATION_SURVEILLANCE/05_IGA/20_CNPE_FLAMANVILLE/56=ETUDES COMPLEMENTAIRES/2019_CANTOFLAM")
-## je charge le jeu de donn?es complet des CPUE : toutes les esp?ces, tous les mois
-TAB <- read.table("data/data_analyses_explo/CPUE/allspecies_allmonths_CPUE.csv", 
+
+
+# load data
+
+source("~/git/CANTOFLAM/CODE/fonction_plotGAM_221018.R")
+
+TAB <- read.table("~/git/CANTOFLAM/DATA/allspecies_allmonths_CPUE.csv", 
                   header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
 TAB[which(TAB$mois== "septembre"), "mois"] <- "sept"
 TAB                                        <- droplevels(TAB)
-tab2  <- read.table("data/data_analyses_explo/dist.csv",  header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
+tab2  <- read.table("~/git/CANTOFLAM/DATA/dist.csv",  header=TRUE, sep=";", na.strings="NA", dec=".", strip.white=TRUE)
+
+
+# data handling
 TAB$ZONE     <- as.factor(substr(TAB$CANTO, 7,12))
 TAB$PERIODE  <- as.factor(substr(TAB$CANTO, 1,5))
 TAB$CAMP     <- as.factor(TAB$AN)
@@ -58,7 +65,8 @@ rm(et, moy)
 tab <- TAB %>% filter(espece %in% c("araignee","homard","tourteau"), AN >= 2000) %>%
   dplyr::select(NB_CAPT, NB_CAS, CPUE, espece, POINT, dist, AN, mois)
 stock <- TAB %>% select(POINT, dist) %>% group_by(POINT) %>% summarise(dist_2= mean(dist)) %>% ungroup()
-#####################////////////////////////////////////Homard - adjust GAMM et estimate Marginal effects pour la table 4
+
+######### Lobster ################
 espece         <- "homard"
 tab1           <- droplevels(tab[which(tab$espece == espece),])
 tab1$mois <- as.factor(tab1$mois)
@@ -76,21 +84,26 @@ stock <- stock %>% dplyr::select(predicted, group, facet, espece, point) %>%
   rename(pred_CPUE = "predicted",
          an = "group",
          saison = "facet")
-# evolution des CPUE entre 2000 et 2018, pour un point "dedans" (le point 8) et un point "dehors" (le point 6)
+
+# Variation in CPUE between 2000 and 2018 for one "inside" point
+#( point 8) et one "outside" point (point 6) between CPUE implementation in 2000 and time serie end 2018
+
+# time effect
 pipo.an <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = c("pred_CPUE")) %>%
-  rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2018_6", apres.dehors = "2018_6") %>%
+  rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2000_6", apres.dehors = "2018_6") %>%
   mutate(effet.an.dedans = (apres.dedans - avant.dedans)*100/avant.dedans,
          effet.an.dehors = (apres.dehors - avant.dehors)*100/avant.dehors) %>%
   dplyr::select(saison, espece, effet.an.dedans, effet.an.dehors)
-# evolution des CPUE entre le point le plus proche du centroide (le point 8) et le point qui en est le plus 
-# eloigne(le point 6) juste après la mise en place du cantonnement (en 2000) et à la toute fin de la série (en 2018)
+
+# distance effect 
 pipo.dist <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = c("pred_CPUE")) %>%
   rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2000_6", apres.dehors = "2018_6") %>%
   mutate(effet.dist.avant = (avant.dehors - avant.dedans)*100/avant.dedans,
          effet.dist.apres = (apres.dehors - apres.dedans)*100/apres.dedans) %>%
   dplyr::select(saison, espece, effet.dist.avant, effet.dist.apres)
 stock2 <- full_join(pipo.an, pipo.dist)
-#####################////////////////////////////////////Tourteau - adjust GAMM et estimate Marginal effects pour la table 4
+
+######### Edible crab ################
 espece         <- "tourteau"
 tab1           <- droplevels(tab[which(tab$espece == espece),])
 tab1$mois <- as.factor(tab1$mois)
@@ -107,14 +120,18 @@ stock <- stock %>% dplyr::select(predicted, group, facet, espece, point) %>%
   rename(pred_CPUE = "predicted",
          an = "group",
          saison = "facet")
-# evolution des CPUE entre 2000 et 2018, pour un point "dedans" (le point 8) et un point "dehors" (le point 6)
+
+# Variation in CPUE between 2000 and 2018 for one "inside" point
+#( point 8) et one "outside" point (point 6) between CPUE implementation in 2000 and time serie end 2018
+
+# tiem effect
 pipo.an <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = c("pred_CPUE")) %>%
   rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2000_6", apres.dehors = "2018_6") %>%
   mutate(effet.an.dedans = (apres.dedans - avant.dedans)*100/avant.dedans,
          effet.an.dehors = (apres.dehors - avant.dehors)*100/avant.dehors) %>%
   dplyr::select(saison, espece, effet.an.dedans, effet.an.dehors)
-# evolution des CPUE entre le point le plus proche du centroide (le point 8) et le point qui en est le plus 
-# eloigne(le point 6) juste après la mise en place du cantonnement (en 2000) et à la toute fin de la série (en 2018)
+
+# Distance effect
 pipo.dist <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = c("pred_CPUE")) %>%
   rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2000_6", apres.dehors = "2018_6") %>%
   mutate(effet.dist.avant = (avant.dehors - avant.dedans)*100/avant.dedans,
@@ -122,7 +139,8 @@ pipo.dist <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = 
   dplyr::select(saison, espece, effet.dist.avant, effet.dist.apres)
 stock3 <- full_join(pipo.an, pipo.dist)
 stock2 <- rbind(stock2, stock3)
-#####################////////////////////////////////////Araignée - adjust GAMM et estimate Marginal effects pour la table 4
+
+######### Spider crab ################
 espece         <- "araignee"
 tab1           <- droplevels(tab[which(tab$espece == espece),])
 tab1$mois <- as.factor(tab1$mois)
@@ -139,14 +157,18 @@ stock <- stock %>% dplyr::select(predicted, group, facet, espece, point) %>%
   rename(pred_CPUE = "predicted",
          an = "group",
          saison = "facet")
-# evolution des CPUE entre 2000 et 2018, pour un point "dedans" (le point 8) et un point "dehors" (le point 6)
+
+# Variation in CPUE between 2000 and 2018 for one "inside" point
+#( point 8) et one "outside" point (point 6) between CPUE implementation in 2000 and time serie end 2018
+
+# time effect
 pipo.an <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = c("pred_CPUE")) %>%
   rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2000_6", apres.dehors = "2018_6") %>%
   mutate(effet.an.dedans = (apres.dedans - avant.dedans)*100/avant.dedans,
          effet.an.dehors = (apres.dehors - avant.dehors)*100/avant.dehors) %>%
   dplyr::select(saison, espece, effet.an.dedans, effet.an.dehors)
-# evolution des CPUE entre le point le plus proche du centroide (le point 8) et le point qui en est le plus 
-# eloigne(le point 6) juste après la mise en place du cantonnement (en 2000) et à la toute fin de la série (en 2018)
+
+# distance effect
 pipo.dist <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = c("pred_CPUE")) %>%
   rename(avant.dedans = "2000_8", apres.dedans = "2018_8", avant.dehors = "2000_6", apres.dehors = "2018_6") %>%
   mutate(effet.dist.avant = (avant.dehors - avant.dedans)*100/avant.dedans,
@@ -154,8 +176,10 @@ pipo.dist <- stock %>% pivot_wider(names_from = c("an", "point"), values_from = 
   dplyr::select(saison, espece, effet.dist.avant, effet.dist.apres)
 stock3 <- full_join(pipo.an, pipo.dist)
 stock2 <- rbind(stock2, stock3)
-########################A bib-big plot
-# homard
+
+
+## Paper plot Figure 3
+# Lobster
 grob_sp <- grobTree(textGrob("Lobster", x=unit(1, "lines"),  y=unit(1, "lines"), hjust=.05, vjust= 1,
                              gp=gpar(col="grey25", fontsize=22, fontface="italic")))
 grob_ltrA <- grobTree(textGrob("A", x=unit(1, "lines"),  y=unit(1, "lines"), hjust=-16, vjust = 1.2,
@@ -198,7 +222,6 @@ bigplot<- grid.arrange(gam_A, gam_B, gam_C, gam_D, gam_E, gam_F, ncol= 2)
 # graphics.off()
 # X11()
 # bigplot
-tiff("//portenbessin/serha/02_OBSERVATION_SURVEILLANCE/05_IGA/20_CNPE_FLAMANVILLE/56=ETUDES COMPLEMENTAIRES/2019_CANTOFLAM/article/figs/CPUE_gamm_221018.tif",
-     units="in", width=10, height=10, res=300)
+
 grid.arrange(gam_A, gam_B, gam_C, gam_D, gam_E, gam_F, ncol= 2)
 dev.off()
