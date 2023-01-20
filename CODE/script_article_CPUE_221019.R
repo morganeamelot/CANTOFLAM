@@ -420,8 +420,12 @@ dev.off()
 #######################################
 # Computed values present in the paper#
 #######################################
+#U: used in the paper
+#NU: not used in the paper
 
 # lobster
+
+#NU
 ### PAPER : computation of the lobser CPUE between 2000 and 2005, then between 2000 and 2018 inside the MPA
 pipo <- TAB %>% filter(espece== "homard" & AN %in% c(2000,2005,2017) & ZONE== "DEDANS") %>%
   group_by(mois, CAMP) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
@@ -431,6 +435,7 @@ pipo %>%  mutate(effet_5ans = (ans5-creation)*100/creation, effet_18ans= (ans17-
 
 TAB%>% group_by(POINT) %>% summarise(mean_dist= mean(dist)) %>% arrange(mean_dist)
 
+#U
 ## Paper, Change in lobster CPUE comparison between 2000, 2005 and 2017 inside the MPA 
 pipo <- TAB %>% filter(espece== "homard" & AN %in% c(2000,2005, 2017) & ZONE== "DEDANS") %>%
   group_by(mois, CAMP) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
@@ -464,6 +469,7 @@ colnames(pipo)[2:3] <- c("point_8", "point_10")
 pipo %>%  mutate(effet_site6 = (point_10-point_8)*100/point_8)
 
 ###PAPER : computation of the e. crab CPUE between 2000 and 2018,
+# U
 #for the point nearest from the MPA boundaries (10 = 1533) and the point furthest from the MPA boundaries  (6 = 6335)
 pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(10,6)) %>% 
   group_by(mois, POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
@@ -471,6 +477,7 @@ pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(10,6)) %>%
 colnames(pipo)[2:3] <- c("point_6", "point_10")  
 pipo %>%  mutate(effet_site6 = (point_6-point_10)*100/point_10)
 
+#NU
 ### PAPER: mean edible crab CPUE variation over 2000-2018, period between the MPA border 
 # sample point (10 = 1533) and the furthest point (6 = 6335)
 pipo <- TAB %>% filter(espece== "tourteau" & AN %in% c(2000,2017)) %>% 
@@ -479,23 +486,34 @@ pipo <- TAB %>% filter(espece== "tourteau" & AN %in% c(2000,2017)) %>%
 colnames(pipo)[2:3] <- c("point_6", "point_10")  
 pipo %>%  mutate(effet_site6 = (point_6-point_10)*100/point_10)
 
+#U
+#to the MPA center (8 = 143m) and the point nearest from the MPA boundaries (10 = 1533)
+pipo <- TAB %>% filter(espece== "tourteau" & POINT %in% c(8,10)) %>% 
+  group_by(mois, POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
+  tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
+colnames(pipo)[2:3] <- c("point_8", "point_10")  
+pipo %>%  mutate(effet_site6 = (point_10-point_8)*100/point_8)
+
 #spider crab
+#U
 ### computation of the s. crab CPUE between 2000 and 2018, for the point closest 
 #to the MPA center (8 = 143m) and the point nearest from the MPA boundaries (10 = 1533)
 pipo <- TAB %>% filter(espece== "araignee" & mois== "juin" & POINT %in% c(8,10)) %>% 
   group_by(POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
   tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
 colnames(pipo) <- c("point_8", "point_10")  
-pipo %>%  mutate(effet_site6 = (point_8-point_10)*100/point_8)
+pipo %>%  mutate(effet_site6 = (point_10-point_8)*100/point_8)
 
+#NU
 ### computation of the s. crab CPUE between 2000 and 2018, for the point closest 
-#to the MPA center (8 = 143m) and and the furthest point (6 = 6335)
-pipo <- TAB %>% filter(espece== "araignee" & mois== "sept" & POINT %in% c(8,6)) %>% 
+#to the MPA center (8 = 143m) and and the furthest point (10 = 1533)
+pipo <- TAB %>% filter(espece== "araignee" & mois== "sept" & POINT %in% c(8,10)) %>% 
   group_by(POINT) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
   tidyr::pivot_wider(names_from= c("POINT"), values_from = "mean_CPUE")
-colnames(pipo) <- c("point_6", "point_8")  
-pipo %>%  mutate(effet_site6 = (point_8-point_10)*100/point_8)
+colnames(pipo) <- c("point_8", "point_10")  
+pipo %>%  mutate(effet_site6 = (point_10-point_8)*100/point_10)
 
+#U
 ### mean spider crab  CPUE variation over 2000-2017 period in june 
 pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2017) & mois == "juin") %>% 
   group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
@@ -503,6 +521,7 @@ pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2017) & mois == "jui
 colnames(pipo)[2:3] <- c("creation", "final")  
 pipo %>%  mutate(effet_reserve = (final-creation)*100/creation)
 
+#U
 ### mean spider crab  CPUE variation over 2000-2005 period and then 2005-2017 in september
 pipo <- TAB %>% filter(espece== "araignee" & AN %in% c(2000,2005,2017) & mois == "sept") %>% 
   group_by(mois, AN) %>% summarise(mean_CPUE= mean(CPUE, na.rm= T)) %>%
